@@ -325,29 +325,55 @@
       }
     });
 
+   
+    // Ejemplo: poner una etiqueta en la posición (100, 150)
+    function agregarEtiqueta(x, y, texto) {
+      const label = document.createElement('div');
+      label.className = 'label-point';
+      label.style.position = 'absolute';
+      label.style.left = (x) + 'px';
+      label.style.top = (y) + 'px';
+      label.style.color = '#000';
+      label.style.background = 'rgba(255,255,255,0.7)';
+      label.style.padding = '2px 4px';
+      label.style.borderRadius = '4px';
+      label.style.fontSize = '10px';
+      label.style.pointerEvents = 'none';
+      label.textContent = texto;
+
+      document.getElementById('court').appendChild(label);
+    }
+
+    const filtrados = RAW.filter(d => d.notation === "-");
+
+
 function renderHeatmap(){
       // Obtener seleccionados
       const selected = Array.from(document.querySelectorAll('input[type=checkbox]:checked'))
                             .map(cb => cb.value);
       // Filtrar dataset
       const filteredData = RAW.filter(d => selected.includes(d.tipo));
-
       const jugador = document.getElementById('jugador').value;
-
       const dato = document.getElementById('dato').value;
+
+      // Eliminar etiquetas anteriores
+      document.querySelectorAll('.label-point').forEach(el => el.remove());
 
       // Filtrar datos
       let filtered = filteredData.filter(d => (jugador==="" || d.jugador===jugador));
 
       // Mostrar overlay naranja si es Crowd
-      const crowdOverlay = document.getElementById('crowdOverlay');
-      
       if(selected.includes("crowd"))
       {
-        //crowdOverlay.style.display = "block";
         document.getElementById('court').classList.add('alt');
+        if(dato==="promedio"){
+          var promedio = filtrados.reduce((a, b) => a + b.promedio, 0) / filtrados.length;
+          agregarEtiqueta(280, 50, promedio.toFixed(1)+"db");
+        }else if(dato==="pico"){
+          var promedio = filtrados.reduce((a, b) => a + b.pico, 0) / filtrados.length;
+          agregarEtiqueta(280, 50, promedio.toFixed(1)+"db");
+        }
       } else {
-        //crowdOverlay.style.display = "none";
         document.getElementById('court').classList.remove('alt');
       }
 
@@ -363,6 +389,8 @@ function renderHeatmap(){
         return { x: pos[0], y: pos[1], value: value, duracion: duracion };
       }).filter(Boolean);
 
+     
+
       // Calcular min/max
       const values = points.map(p => p.value);
       const min = values.length ? Math.min(...values) : 0;
@@ -371,12 +399,10 @@ function renderHeatmap(){
       // Actualizar heatmap
       heatmapInstance.setData({ min, max, data: points });
 
-      // Eliminar etiquetas anteriores
-      document.querySelectorAll('.label-point').forEach(el => el.remove());
+
 
       // Agregar etiquetas nuevas
-      const court = document.getElementById('court');
-       
+      //const court = document.getElementById('court');
 
       // Agrupar puntos por coordenadas
       const grouped = {};
@@ -392,21 +418,8 @@ function renderHeatmap(){
       // Calcular promedio y crear etiquetas
       Object.values(grouped).forEach(g => {
         const avg = g.duraciones.reduce((a, b) => a + b, 0) / g.duraciones.length;
-
-        const label = document.createElement('div');
-        label.className = 'label-point';
-        label.style.position = 'absolute';
-        label.style.left = (g.x - 15) + 'px'; // ajustar para centrar
-        label.style.top = (g.y - 20) + 'px';
-        label.style.color = '#000';
-        label.style.background = 'rgba(255,255,255,0.3)';
-        label.style.padding = '2px 4px';
-        label.style.borderRadius = '4px';
-        label.style.fontSize = '8px';
-        label.style.pointerEvents = 'none';
-        label.textContent = avg.toFixed(1) + " seg (*)"; // promedio con 1 decimal
-
-        court.appendChild(label);
+        var text = avg.toFixed(1) + " seg (*)";
+        agregarEtiqueta(g.x - 15, g.y - 20, text);
       });
 
     }
